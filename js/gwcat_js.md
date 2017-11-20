@@ -1,6 +1,6 @@
 # GWCat demo
 
-Summary: <span id="message">It doesn't work :(</span>
+Summary: It works :-)
 
 ## Initialisation
 
