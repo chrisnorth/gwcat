@@ -19,7 +19,7 @@
 	    "Mtotal":{"name": "%data.Mtotal.name%","priority": 2, "sigfig": 3,
 	         "unit": "%data.mass.unit.msun%", "err": 2, "name_en":"Total mass", "unit_en":"M_sun"},
 	    "chi":{"name": "%data.chi.name%", "priority": 4, "sigfig": 2,
-	        "err": 2, "name_en":"Effective spin"},
+	        "err": 2, "name_en":"Effective inspiral spin"},
 	    "Mfinal":{"name": "%data.Mfinal.name%", "priority": 2, "sigfig": 3,
 	        "unit": "%data.mass.unit.msun%", "err": 2, "name_en":"Final mass", "unit_en":"M_sun"},
 	    "Mratio":{"name": "%data.Mratio.name%", "priority": 2, "sigfig": 3,
