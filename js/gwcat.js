@@ -1,6 +1,6 @@
 function GWCat(callback,inp){
     this.inp = inp;
-    this.callback = (callback) ? callback : this.callbackDefault;
+    this.callback = (typeof callback==="function") ? callback : this.callbackDefault;
     this.init();
 
     this.loadData();
@@ -18,7 +18,7 @@ GWCat.prototype.init = function(){
 
 GWCat.prototype.callbackDefault = function(){
     console.log('Successfully loaded data');
-    return this;
+	return this;
 }
 
 GWCat.prototype.loadData = function(){
@@ -153,7 +153,7 @@ GWCat.prototype.loadData = function(){
 		if(_gw.debug){console.log('data loaded via internal:',_gw.data);}
 		if (loaded==toLoad){
 			_gw.orderData('GPS');
-			_gw.callback();
+			return _gw.callback(_gw);
 		}
 	}
 
