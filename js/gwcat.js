@@ -2,6 +2,7 @@ function GWCat(callback,inp){
     this.inp = inp;
     this.callback = (typeof callback==="function") ? callback : this.callbackDefault;
     this.init();
+    this.length = 0;	// Quick alias for length of catalogue
 
     this.loadData();
     return this;
@@ -26,6 +27,7 @@ GWCat.prototype.loadData = function(){
     // load external data (assumes d3 is loaded)
     var toLoad=1;
     var loaded=0;
+    this.length = 0;	// Quick alias for length of catalogue
     this.data=[];
 
 	// Default data loader
@@ -150,6 +152,10 @@ GWCat.prototype.loadData = function(){
 			}
 			_gw.data.push(dataIn.data[e]);
 		}
+
+		// Quick alias for length
+		_gw.length = _gw.data.length;
+
 		if(_gw.debug){console.log('data loaded via internal:',_gw.data);}
 		if (loaded==toLoad){
 			_gw.orderData('GPS');
@@ -195,13 +201,23 @@ GWCat.prototype.showError = function(message){
     return this;
 }
 
-GWCat.prototype.orderData = function(order='GPS'){
-    this.data=this.data.sort(function(a,b){
-        return b[order].best - a[order].best
-    });
-    var dataOrder=[];
-    this.data.forEach(function(d){dataOrder.push(d.name);});
-    this.dataOrder=dataOrder;
+
+// Function to sort the catalogue using a data key
+// If reverse is true then the order will be reversed
+GWCat.prototype.orderData = function(order='GPS',reverse){
+    sign = ((typeof reverse==="boolean") ? reverse : false) ? -1 : 1;
+    if(this.data[0][order]){
+	    best = (typeof this.data[0][order]==="object" && this.data[0][order].best);
+		this.data=this.data.sort(function(a,b){
+			if(best) return a[order].best < b[order].best ? -(sign)*1 : (sign)*1;
+			else return a[order] < b[order] ? -(sign)*1 : (sign)*1;
+		});
+		var dataOrder = [];
+		this.data.forEach(function(d){dataOrder.push(d.name);});
+		this.dataOrder = dataOrder;
+	}else{
+		console.log("No key "+order+". Data order stays the same.");
+	}
     return this;
 }
 

@@ -18,7 +18,7 @@
 	}
 	.unittest:last-child { margin-bottom: 0px; }
 	.unittest p { margin-top: 0px; }
-	.unittest code { line-height: 1.5em; color: rgba(0,0,0,0.7); }
+	.unittest code, .unittest pre { line-height: 1.5em; color: rgba(0,0,0,0.7); }
 	.unittest-fail {
 		background: rgba(214, 39, 40,0.3);
 		border: 1px solid rgb(214, 39, 40);
@@ -27,6 +27,7 @@
 		background: rgba(118, 208, 119, 0.3);
 		border: 1px solid rgb(118, 208, 119);
 	}
+	.unittest .input { margin-bottom: 0.5em; }
 	.unittest .expect, .unittest .output {
 		font-style: italic;
 	}
@@ -132,19 +133,23 @@
 
 	<h2 id="tests">Example Tests</h2>
 	<ul class="unittests">
-		<li class="unittest"><p>Check we can get the mass of the primary object.  Note that <code>getBest(event,param)</code> is just an alias for <code>getValue(event,param,'best')</code></p><code><span class="input">gwcat.getBest("GW150914","M1") + " " + gwcat.paramUnit("M1")</span><br />// Expect: <span class="expect">36.2 M_sun</span><br />// Return: <span class="output">ERROR</span></code></li>
-		<li class="unittest"><p>Check we can get the mass of the primary object using the <em>this</em> object rather than a global variable. This will allow multiple catalogues to be loaded and a single callback function to process them as it doesn't need to know the name of the variable.</p><code><span class="input">this.getBest("GW150914","M1") + " " + this.paramUnit("M1")</span><br />// Expect: <span class="expect">36.2 M_sun</span><br />// Return: <span class="output">ERROR</span></code></li>
-		<li class="unittest"><p>Get the final, combined, mass of the event.</p><code><span class="input">gwcat.getUpper("GW170817","Mfinal") + " " + gwcat.paramUnit("Mfinal")</span><br />// Expect: <span class="expect">2.755 M_sun</span><br />// Return: <span class="output">ERROR</span></code></li>
-		<li class="unittest"><code><span class="input">gwcat.getParamType("GW170817","Mfinal")</span><br />// Expect: <span class="expect">upper</span><br />// Return: <span class="output">ERROR</span></code></li>
-		<li class="unittest"><code><span class="input">gwcat.getValue("GW170817","Erad","lower") + " " + gwcat.paramUnit("Erad")</span><br />// Expect: <span class="expect">0.025 M_sun c^2</span><br />// Return: <span class="output">ERROR</span></code></li>
-		<li class="unittest"><code><span class="input">gwcat.getLim("GW170817","Mratio") + gwcat.paramUnit("Mratio")</span><br />// Expect: <span class="expect">0.7,1</span><br />// Return: <span class="output">ERROR</span></code></li>
-		<li class="unittest"><p>Return a text description of the parameter.</p><code><span class="input">gwcat.paramName("chi")</span><br />// Expect: <span class="expect">Effective inspiral spin</span><br />// Return: <span class="output">ERROR</span></code></li>
-		<li class="unittest"><code><span class="input">gwcat.paramUnit("lpeak")</span><br />// Expect: <span class="expect">10^56 erg s^-1</span><br />// Return: <span class="output">ERROR</span></code></li>
+		<li class="unittest"><p>Check we can get the mass of the primary object.  Note that <code>getBest(event,param)</code> is just an alias for <code>getValue(event,param,'best')</code></p><code><div class="input">gwcat.getBest("GW150914","M1") + " " + gwcat.paramUnit("M1")</div>// Expect: <span class="expect">36.2 M_sun</span><br />// Return: <span class="output">ERROR</span></code></li>
+		<li class="unittest"><p>Check we can get the mass of the primary object using the <em>this</em> object rather than a global variable. This will allow multiple catalogues to be loaded and a single callback function to process them as it doesn't need to know the name of the variable.</p><code><div class="input">this.getBest("GW150914","M1") + " " + this.paramUnit("M1")</div>// Expect: <span class="expect">36.2 M_sun</span><br />// Return: <span class="output">ERROR</span></code></li>
+		<li class="unittest"><p>Get the final, combined, mass of the event.</p><code><div class="input">gwcat.getUpper("GW170817","Mfinal") + " " + gwcat.paramUnit("Mfinal")</div>// Expect: <span class="expect">2.755 M_sun</span><br />// Return: <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><div class="input">gwcat.getParamType("GW170817","Mfinal")</div>// Expect: <span class="expect">upper</span><br />// Return: <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><div class="input">gwcat.getValue("GW170817","Erad","lower") + " " + gwcat.paramUnit("Erad")</div>// Expect: <span class="expect">0.025 M_sun c^2</span><br />// Return: <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><div class="input">gwcat.getLim("GW170817","Mratio") + gwcat.paramUnit("Mratio")</div>// Expect: <span class="expect">0.7,1</span><br />// Return: <span class="output">ERROR</span></code></li>
+		<li class="unittest"><p>Return a text description of the parameter.</p><code><div class="input">gwcat.paramName("chi")</div>// Expect: <span class="expect">Effective inspiral spin</span><br />// Return: <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><div class="input">gwcat.paramUnit("lpeak")</div>// Expect: <span class="expect">10^56 erg s^-1</span><br />// Return: <span class="output">ERROR</span></code></li>
+		<li class="unittest"><pre><div class="input">function earliestGW(){
+	gwcat.orderData("UTC");
+	return gwcat.data[0].name;
+}
+earliestGW();</div>// Expect: <span class="expect">GW150914</span><br />// Return: <span class="output">ERROR</span></pre></li>
 	</ul>
 	<script type="text/javascript">
 		function runTests(){
 			var tests,n,pass,rtn,exp;
-			console.log(this)
 			tests = S('.unittest');
 			n = tests.length;
 			pass = 0;
