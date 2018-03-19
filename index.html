@@ -1,127 +1,164 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
-    <title>gwcat test page</title>
-    <script type="text/javascript" src="js/lib/d3.v4.min.js"></script>
-    <script type="text/javascript" src="js/gwcat.js"></script>
+	<title>gwcat test page</title>
+	<!--<script type="text/javascript" src="js/lib/d3.v4.min.js"></script>-->
+	<script type="text/javascript" src="js/lib/stuquery.js"></script>
+	<script type="text/javascript" src="js/gwcat.js"></script>
+	<style>
+	ul.unittests {
+		margin: 0px;
+		padding: 0px;
+		list-style: none;
+	}
+	.unittest {
+		padding: 1em;
+		display: block;
+		margin-bottom: 0.5em;
+		position: relative;
+	}
+	.unittest:last-child { margin-bottom: 0px; }
+	.unittest-fail {
+		background: rgba(214, 39, 40,0.3);
+		border: 1px solid rgb(214, 39, 40);
+	}
+	.unittest-success {
+		background: rgba(118, 208, 119, 0.3);
+		border: 1px solid rgb(118, 208, 119);
+	}
+	.unittest .expect, .unittest .output {
+		font-style: italic;
+	}
+	</style>
 </head>
 <body>
-    <h1>GWCat demo</h1>
-    <p>Summary: <span id="message">It doesn't work :(</span></p>
-    <h2>Initialisation</h2>
-    In the &lt;head&gt; of the page, include the <code>gwcat</code> and <code>d3</code> libraries.
-    <pre><code>
-        &lt;script type="text/javascript" src="js/lib/d3.v4.min.js"&gt;&lt;/script&gt;
-        &lt;script type="text/javascript" src="js/gwcat.js"&gt;&lt;/script&gt;
-    </code></pre>
-    <p>To initialise the database of events</p>
-    <pre><code>
-        gwcat = new GWCat(<i>callback</i>, {<i>parameters</i>});
-    </code></pre>
-    <ul>
-        <li><b><i>callback</i></b> [function]: a javascript function to be run once data is loaded.</li>
-        <li><b><i>parameters</i></b> [Object, optional]: a dictionary containing input parameters:
-            <ul>
-                <li><i>debug</i>: [boolean] set to print useful debugging scripts to the console (default=true)</li>
-                <li><i>fileIn</i>: [string] json file to load data from (default=data/events.json)</li>
-            </ul>
-        </li>
-    </ul>
-    <p>The resulting object contains the following objects:
-        <ul>
-            <li><b><i>data</i></b>: An array containing all the events, each one of which is a javascript object.</li>
-            <li><b><i>datadict</i></b>: An object containing the metadata of all the parameter names, default precisions etc.</li>
-            <li><b><i>dataOrder</i></b>: An array of the event names, showing the order of <i>data</i>.</li>
-        </ul>
-    </p>
-    <h2>Data format</h2>
-    <p>The data array contains an object for each event. Each event has a set of parameters (M1, M2, Mchirp, UTC, etc.), within which is an object containing the relevant values.</p>
-    <pre><code>
-    gwcat.data = [
-        {
-            "Event1 Parameter1": {
-                "Event1 Parameter1 Value1": string/number/array
-            },
-            "Event1 Parameter2": {
-                "Event1 Parameter2 Value1": string/array/value
-                "Event1 Parameter2 Value2": string/array/value
-            },...
-        },
-        {
-            "Event2 Parameter1":{
-                "Event2 Parameter1 Value1": string/number/array
-            },...
-        },...
-    ]
-    </code></pre>
-    <p>The parameters are those recorded for each event. Note that not all are present for each event.<p>
-        <ul>
-            <li><b><i>name</i></b>: Event name (e.g. GW150914)</li>
-            <li><b><i>UTC</i></b>: UTC time of detection (YYYY-MM-DDThh:mm:ss)</li>
-            <li><b><i>GPS</i></b>: GPS time of detection</li>
-            <li><b><i>M1</i></b>: Primary mass (Msun)</li>
-            <li><b><i>M2</i></b>: Secondary mass (Msun)</li>
-            <li><b><i>Mchirp</i></b>: Chirp mass (Msun)</li>
-            <li><b><i>Mtotal</i></b>: Total mass (Msun)</li>
-            <li><b><i>Mfinal</i></b>: Final mass (Msun)</li>
-            <li><b><i>Mratio</i></b>: Mass ratio</li>
-            <li><b><i>chi</i></b>: Effective inspiral spin</li>
-            <li><b><i>af</i></b>: Final spin</li>
-            <li><b><i>DL</i></b>: Luminosity distance (MPc)</li>
-            <li><b><i>z</i></b>: Redshift</li>
-            <li><b><i>lpeak</i></b>: Peak luminosity (10<sup>56</sup> erg s<sup>-1</sup>)</li>
-            <li><b><i>Erad</i></b>: Radiated energy (Msun c<sup>2</sup>)</li>
-            <li><b><i>FAR</i></b>: False alarm rate (yr<sup>-1</sup>)</li>
-            <li><b><i>deltaOmega</i></b>: Sky localization area (deg<sup>2</sup>)</li>
-            <li><b><i>rho</i></b>: Signal-to-noise ratio</li>
-        </ul>
-    </p>
-    <p>The values can be any of:
-        <ul>
-            <li><b><i>best</i></b>: exact of best-fit value of parameter. Can be string (e.g. name, UTC), or number (e.g. masses, spins, GPS).</li>
-            <li><b><i>lower</i></b>: a (numerical) lower limit on the parameter.</li>
-            <li><b><i>upper</i></b>: a (numerical) upper limit on the parameter.</li>
-            <li><b><i>lim</i></b>: a two-element array (of numberse) containing the range of plausible values (where applicable), in order [<i>min</i>, <i>max</i>]. Used where a best-fit value and corresponding error isn't appropriate.
-            <li><b><i>err</i></b>: a two-element array (of numberse) containing the errors on the "best" value (where applicable), in order [<i>upper</i>, <i>lower</i>]. Only accompanies a "best" value.</li>
+	<h1>GWCat demo</h1>
+	<p>Summary: <span id="message">It doesn't work :(</span></p>
+	<h2>Initialisation</h2>
+	In the &lt;head&gt; of the page, include the <code>gwcat</code> library.
+	<pre><code><!--
+		&lt;script type="text/javascript" src="js/lib/d3.v4.min.js"&gt;&lt;/script&gt;-->
+		&lt;script type="text/javascript" src="js/gwcat.js"&gt;&lt;/script&gt;
+	</code></pre>
+	<p>To initialise the database of events</p>
+	<pre><code>
+		gwcat = new GWCat(<i>callback</i>, {<i>parameters</i>});
+	</code></pre>
+	<ul>
+		<li><b><i>callback</i></b> [function]: a javascript function to be run once data is loaded.</li>
+		<li><b><i>parameters</i></b> [Object, optional]: a dictionary containing input parameters:
+			<ul>
+				<li><i>debug</i>: [boolean] set to print useful debugging scripts to the console (default=true)</li>
+				<li><i>fileIn</i>: [string] json file to load data from (default=data/events.json)</li>
+			</ul>
+		</li>
+	</ul>
+	<p>The resulting object contains the following objects:
+		<ul>
+			<li><b><i>data</i></b>: An array containing all the events, each one of which is a javascript object.</li>
+			<li><b><i>datadict</i></b>: An object containing the metadata of all the parameter names, default precisions etc.</li>
+			<li><b><i>dataOrder</i></b>: An array of the event names, showing the order of <i>data</i>.</li>
+		</ul>
+	</p>
+	<h2>Data format</h2>
+	<p>The data array contains an object for each event. Each event has a set of parameters (M1, M2, Mchirp, UTC, etc.), within which is an object containing the relevant values.</p>
+	<pre><code>
+	gwcat.data = [
+		{
+			"Event1 Parameter1": {
+				"Event1 Parameter1 Value1": string/number/array
+			},
+			"Event1 Parameter2": {
+				"Event1 Parameter2 Value1": string/array/value
+				"Event1 Parameter2 Value2": string/array/value
+			},...
+		},
+		{
+			"Event2 Parameter1":{
+				"Event2 Parameter1 Value1": string/number/array
+			},...
+		},...
+	]
+	</code></pre>
+	<p>The parameters are those recorded for each event. Note that not all are present for each event.<p>
+		<ul>
+			<li><b><i>name</i></b>: Event name (e.g. GW150914)</li>
+			<li><b><i>UTC</i></b>: UTC time of detection (YYYY-MM-DDThh:mm:ss)</li>
+			<li><b><i>GPS</i></b>: GPS time of detection</li>
+			<li><b><i>M1</i></b>: Primary mass (Msun)</li>
+			<li><b><i>M2</i></b>: Secondary mass (Msun)</li>
+			<li><b><i>Mchirp</i></b>: Chirp mass (Msun)</li>
+			<li><b><i>Mtotal</i></b>: Total mass (Msun)</li>
+			<li><b><i>Mfinal</i></b>: Final mass (Msun)</li>
+			<li><b><i>Mratio</i></b>: Mass ratio</li>
+			<li><b><i>chi</i></b>: Effective inspiral spin</li>
+			<li><b><i>af</i></b>: Final spin</li>
+			<li><b><i>DL</i></b>: Luminosity distance (MPc)</li>
+			<li><b><i>z</i></b>: Redshift</li>
+			<li><b><i>lpeak</i></b>: Peak luminosity (10<sup>56</sup> erg s<sup>-1</sup>)</li>
+			<li><b><i>Erad</i></b>: Radiated energy (Msun c<sup>2</sup>)</li>
+			<li><b><i>FAR</i></b>: False alarm rate (yr<sup>-1</sup>)</li>
+			<li><b><i>deltaOmega</i></b>: Sky localization area (deg<sup>2</sup>)</li>
+			<li><b><i>rho</i></b>: Signal-to-noise ratio</li>
+		</ul>
+	</p>
+	<p>The values can be any of:
+		<ul>
+			<li><b><i>best</i></b>: exact of best-fit value of parameter. Can be string (e.g. name, UTC), or number (e.g. masses, spins, GPS).</li>
+			<li><b><i>lower</i></b>: a (numerical) lower limit on the parameter.</li>
+			<li><b><i>upper</i></b>: a (numerical) upper limit on the parameter.</li>
+			<li><b><i>lim</i></b>: a two-element array (of numberse) containing the range of plausible values (where applicable), in order [<i>min</i>, <i>max</i>]. Used where a best-fit value and corresponding error isn't appropriate.
+			<li><b><i>err</i></b>: a two-element array (of numberse) containing the errors on the "best" value (where applicable), in order [<i>upper</i>, <i>lower</i>]. Only accompanies a "best" value.</li>
 
-        </ul>
-    <h2>Built-in functions</h2>
-    <p>A number of functions exist to allow access to the data.</p>
-    <ul>
-        <li><b><i>getParamType</i></b>(<i>event</i>, <i>param</i>): get the type of the value of parameter <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns string of value type, or '' if not found.</li>
-        <li><b><i>hasError</i></b>(<i>event</i>, <i>param</i>): returns whether the <i>param</i> [string] has an "err" value for event <i>event</i> (name [string] or index [integer]). Returns boolean (true|false), or false if not found.</li>
-        <li><b><i>getBest</i></b>(<i>event</i>, <i>param</i>): gets "best" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or NaN if not found.</li>
-        <li><b><i>getBestErr</i></b>(<i>event</i>, <i>param</i>): gets "best" and "err" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns array of [best, err].</li>
-        <li><b><i>getLim</i></b>(<i>event</i>, <i>param</i>): gets "lim" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or empty array [] if not found.</li>
-        <li><b><i>getLower</i></b>(<i>event</i>, <i>param</i>): gets "lower" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or NaN if not found.</li>
-        <li><b><i>getUpper</i></b>(<i>event</i>, <i>param</i>): gets "upper" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or NaN if not found.</li>
-        <li><b><i>getError</i></b>(<i>event</i>, <i>param</i>): gets "err" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or empty array [] if not found.</li>
-        <li><b><i>getNominal</i></b>(<i>event</i>, <i>param</i>): gets the nominal value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns best, lower or upper value, or average of lim values.</li>
-        <li><b><i>getMinValue</i></b>(<i>event</i>, <i>param</i>): gets the minimum value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns "best"-"err[1]", "lower", lower "lim" values, or -Infinity for "upper" values</li>
-        <li><b><i>getMaxValue</i></b>(<i>event</i>, <i>param</i>): gets the minimum value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns "best"+"err[0]", "upper", higher "lim" values, or +Infinity for "lower" values</li>
-        <li><b><i>paramName</i></b>(<i>param</i>): returns the name of <i>param</i> [string] as stored in datadict, or '' if not found.</li>
-        <li><b><i>paramUnit</i></b>(<i>param</i>): returns the unit of <i>param</i> [string] as stored in datadict, or '' if not found.</li>
-    </ul>
+		</ul>
+	<h2>Built-in functions</h2>
+	<p>A number of functions exist to allow access to the data.</p>
+	<ul>
+		<li><b><i>getParamType</i></b>(<i>event</i>, <i>param</i>): get the type of the value of parameter <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns string of value type, or '' if not found.</li>
+		<li><b><i>hasError</i></b>(<i>event</i>, <i>param</i>): returns whether the <i>param</i> [string] has an "err" value for event <i>event</i> (name [string] or index [integer]). Returns boolean (true|false), or false if not found.</li>
+		<li><b><i>getBest</i></b>(<i>event</i>, <i>param</i>): gets "best" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or NaN if not found.</li>
+		<li><b><i>getBestErr</i></b>(<i>event</i>, <i>param</i>): gets "best" and "err" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns array of [best, err].</li>
+		<li><b><i>getLim</i></b>(<i>event</i>, <i>param</i>): gets "lim" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or empty array [] if not found.</li>
+		<li><b><i>getLower</i></b>(<i>event</i>, <i>param</i>): gets "lower" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or NaN if not found.</li>
+		<li><b><i>getUpper</i></b>(<i>event</i>, <i>param</i>): gets "upper" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or NaN if not found.</li>
+		<li><b><i>getError</i></b>(<i>event</i>, <i>param</i>): gets "err" value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns value, or empty array [] if not found.</li>
+		<li><b><i>getNominal</i></b>(<i>event</i>, <i>param</i>): gets the nominal value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns best, lower or upper value, or average of lim values.</li>
+		<li><b><i>getMinValue</i></b>(<i>event</i>, <i>param</i>): gets the minimum value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns "best"-"err[1]", "lower", lower "lim" values, or -Infinity for "upper" values</li>
+		<li><b><i>getMaxValue</i></b>(<i>event</i>, <i>param</i>): gets the minimum value for <i>param</i> [string] for event <i>event</i> (name [string] or index [integer]). Returns "best"+"err[0]", "upper", higher "lim" values, or +Infinity for "lower" values</li>
+		<li><b><i>paramName</i></b>(<i>param</i>): returns the name of <i>param</i> [string] as stored in datadict, or '' if not found.</li>
+		<li><b><i>paramUnit</i></b>(<i>param</i>): returns the unit of <i>param</i> [string] as stored in datadict, or '' if not found.</li>
+	</ul>
 
-    <h2>Example Tests</h2>
-        <p><code>gwcat.getBest("GW150914","M1") + gwcat.paramUnit("M1")<br>// <span id="M1best">ERROR</span></code></p>
-        <p><code>gwcat.getParamType("GW170817","Mfinal")<br> // <span id="Mfinaltype">ERROR</span></code></p>
-        <p><code>gwcat.getUpper("GW170817","Mfinal") + gwcat.paramUnit("Mfinal")<br> // <span id="Mfinalupper">ERROR</span></code></p>
-        <p><code>gwcat.getValue("GW170817","Erad","lower") + gwcat.paramUnit("Erad")<br> // <span id="Eradlower">ERROR</span></code></p>
-        <p><code>gwcat.getLim("GW170817","Mratio") + gwcat.paramUnit("Mratio")<br> // <span id="Mratiolim">ERROR</span></code></p>
-        <p><code>gwcat.paramName("chi")<br> // <span id="chiname">ERROR</span></code></p>
-        <p><code>gwcat.paramUnit("lpeak")<br> // <span id="lpeakunit">ERROR</span></code></p>
-    <script type="text/javascript">
-        var onSuccess = function(){
-            document.getElementById("message").innerHTML = "It Loads! :-)";
-            document.getElementById("M1best").innerHTML = gwcat.getBest("GW150914","M1")+" "+gwcat.paramUnit("M1");
-            document.getElementById("Mfinaltype").innerHTML = gwcat.getParamType("GW170817","Mfinal");
-            document.getElementById("Mfinalupper").innerHTML = gwcat.getUpper("GW170817","Mfinal")+" "+gwcat.paramUnit("Mfinal");
-            document.getElementById("Eradlower").innerHTML = gwcat.getValue("GW170817","Erad","lower")+" "+gwcat.paramUnit("Erad");
-            document.getElementById("Mratiolim").innerHTML = "["+gwcat.getLim("GW170817","Mratio").toString()+"] "+gwcat.paramUnit("Mratio");
-            document.getElementById("chiname").innerHTML = gwcat.paramName("chi");
-            document.getElementById("lpeakunit").innerHTML = gwcat.paramUnit("lpeak");
-        }
-        var gwcat = new GWCat(onSuccess);
-    </script>
+	<h2 id="tests">Example Tests</h2>
+	<ul class="unittests">
+		<li class="unittest"><code><span class="input">gwcat.getBest("GW150914","M1") + " " + gwcat.paramUnit("M1")</span><br />// Expect: <span class="expect">36.2 M_sun</span> and got <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><span class="input">gwcat.getParamType("GW170817","Mfinal")</span><br />// Expect: <span class="expect">upper</span> and got <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><span class="input">gwcat.getUpper("GW170817","Mfinal") + " " + gwcat.paramUnit("Mfinal")</span><br />// Expect: <span class="expect">2.755 M_sun</span> and got <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><span class="input">gwcat.getValue("GW170817","Erad","lower") + " " + gwcat.paramUnit("Erad")</span><br />// Expect: <span class="expect">0.025 M_sun c^2</span> and got <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><span class="input">"[" + gwcat.getLim("GW170817","Mratio") + gwcat.paramUnit("Mratio") + "]"</span><br />// Expect: <span class="expect">[0.7,1]</span> and got <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><span class="input">gwcat.paramName("chi")</span><br />// Expect: <span class="expect">Effective inspiral spin</span> and got <span class="output">ERROR</span></code></li>
+		<li class="unittest"><code><span class="input">gwcat.paramUnit("lpeak")</span><br />// Expect: <span class="expect">10^56 erg s^-1</span> and got <span class="output">ERROR</span></code></li>
+	</ul>
+	<script type="text/javascript">
+		function runTests(){
+			var tests,n,pass,rtn,exp;
+			tests = S('.unittest');
+			n = tests.length;
+			pass = 0;
+			for(var i = 0; i < n; i++){
+				el = S(tests[i]);
+				rtn = eval(el.find('.input').html());
+				exp = el.find('.expect').html();
+				el.find('.output').html(rtn);
+				if(rtn == exp){
+					el.addClass('unittest-success').removeClass('unittest-fail');
+					pass++;
+				}else{
+					el.addClass('unittest-fail').removeClass('unittest-success');
+				}
+			}
+			S('#message').html('It loads! :-) <a href="#tests">Passed '+pass+' of '+n+' tests</a>');
+		}
+		var gwcat = new GWCat(runTests);
+	</script>
 </body>
 </html>
