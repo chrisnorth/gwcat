@@ -229,11 +229,8 @@ GWCat.prototype.orderData = function(order='GPS',reverse){
 }
 
 GWCat.prototype.event2idx = function(event){
-    if (typeof event == "number"){
-        idx=event;
-    }else{
-        idx=this.dataOrder.indexOf(event);
-    }
+    if (typeof event == "number") idx=event;
+    else idx=this.dataOrder.indexOf(event);
     return idx;
 }
 
