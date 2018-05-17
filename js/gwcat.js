@@ -263,7 +263,7 @@ GWCat.prototype.getParamType = function(event,param){
         }else if (value.hasOwnProperty('upper')){
             valtype='upper'
         }else if (value.hasOwnProperty('lim')){
-            valtype='limit'
+            valtype='lim'
         }else{
             valtype='unknown'
         }
