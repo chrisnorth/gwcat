@@ -337,7 +337,7 @@ GWCat.prototype.getMinVal = function(event,param){
     }else if(valType=='lower'){
         return this.getLower(event,param);
     }else if(valType=='upper'){
-        return Number.POSITIVE_INFINITY;
+        return Number.NEGATIVE_INFINITY;
     }
 }
 
@@ -352,7 +352,7 @@ GWCat.prototype.getMaxVal = function(event,param){
             return this.getBest(event,param);
         }
     }else if(valType=='lower'){
-        return Number.NEGATIVE_INFINITY;
+        return Number.POSITIVE_INFINITY;
     }else if(valType=='upper'){
         return this.getUpper(event,param);
     }
