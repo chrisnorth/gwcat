@@ -37,10 +37,20 @@
 	    "deltaOmega":{"name": "%data.skyArea.name%", "priority": 5, "sigfig": 2,
 	        "unit": "%data.skyArea.unit%", "err": 0, "name_en":"Sky localization area","unit_en":"deg^2"}
 	},
+	"obsruns": {
+		"O1":{"dates":["2015-09-12T00:00:00","2016-01-19T16:00:00"],
+			"network":"HL"
+		},
+		"O2a":{"dates":["2016-09-12T00:00:00","2017-01-19T16:00:00"],
+			"network":"HL"}
+	},
 	"data": {
 		"GW150914": {
 			"objType": {
 				"best":"BBH"
+			},
+			"obsrun":{
+				"best":"O1"
 			},
 			"Mratio": {
 				"err": [
@@ -148,6 +158,9 @@
 			"objType": {
 				"best":"BBH"
 			},
+			"obsrun":{
+				"best":"O1"
+			},
 			"Mratio": {
 				"err": [
 					0.38,
@@ -253,6 +266,9 @@
 		"GW151226": {
 			"objType": {
 				"best":"BBH"
+			},
+			"obsrun":{
+				"best":"O1"
 			},
 			"Mratio": {
 				"err": [
@@ -360,6 +376,9 @@
 			"objType": {
 				"best":"BBH"
 			},
+			"obsrun":{
+				"best":"O2"
+			},
 			"Mratio": {
 				"err": [
 					0.32,
@@ -465,6 +484,9 @@
 		"GW170608": {
 			"objType": {
 				"best":"BBH"
+			},
+			"obsrun":{
+				"best":"O2"
 			},
 			"Mratio": {
 				"err": [
@@ -573,6 +595,9 @@
 			"objType": {
 				"best":"BBH"
 			},
+			"obsrun":{
+				"best":"O2"
+			},
 			"Mratio": {
 				"err": [
 					0.18,
@@ -679,6 +704,9 @@
 		"GW170817": {
 			"objType": {
 				"best":"BNS"
+			},
+			"obsrun":{
+				"best":"O2"
 			},
 			"Mratio": {
 				"lim": [
