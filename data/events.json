@@ -35,14 +35,10 @@
 	    "z":{"name": "%data.z.name%","priority": 2, "sigfig": 2,
 	        "err": 2, "name_en":"Redshift"},
 	    "deltaOmega":{"name": "%data.skyArea.name%", "priority": 5, "sigfig": 2,
-	        "unit": "%data.skyArea.unit%", "err": 0, "name_en":"Sky localization area","unit_en":"deg^2"}
-	},
-	"obsruns": {
-		"O1":{"dates":["2015-09-12T00:00:00","2016-01-19T16:00:00"],
-			"network":"HL"
-		},
-		"O2a":{"dates":["2016-09-12T00:00:00","2017-01-19T16:00:00"],
-			"network":"HL"}
+	        "unit": "%data.skyArea.unit%", "err": 0, "name_en":"Sky localization area","unit_en":"deg^2"},
+		"obsrun":{"name": "%data.obsrun.name","priority":5, "sigfig":0,"err":0,"name_en":"Observing run"},
+		"net":{"name": "%data.net.name","priority":5, "sigfig":0,"err":0,"name_en":"Detector network"},
+		"rho":{"name": "%data.rho.name","priority":5, "sigfig":0,"err":0,"name_en":"Signal to noise network"}
 	},
 	"data": {
 		"GW150914": {
