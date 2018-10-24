@@ -30,7 +30,7 @@ GWCat.prototype.callbackDefault = function(){
 
 GWCat.prototype.loadData = function(){
     var _gw = this;
-    // load external data (assumes d3 is loaded)
+    // load external data
     var toLoad=1;
     var loaded=0;
     this.length = 0;	// Quick alias for length of catalogue
@@ -123,8 +123,8 @@ GWCat.prototype.loadData = function(){
 				linkIn=dataIn.links[e];
 				newlinks[e]={}
 				for (l in linkIn){
-					if (linkIn[l].text.search('Paper')>=0) newlinks[e]['DetPaper'] = { 'text': linkIn[l].text, 'url': linkIn[l].url, 'type': 'paper' };
-					else if (linkIn[l].text.search('Open Data page')>=0) newlinks[e]['LOSCData'] = { 'text': linkIn[l].text, 'url': linkIn[l].url, 'type': 'web-data' };
+					if (linkIn[l].type.search('pub')>=0) newlinks[e]['DetPaper'] = { 'text': linkIn[l].text, 'url': linkIn[l].url, 'type': 'pub' };
+					else if (linkIn[l].type.search('open-data')>=0) newlinks[e]['LOSCData'] = { 'text': linkIn[l].text, 'url': linkIn[l].url, 'type': 'open-data' };
 					else if (linkIn[l].text.search('GraceDB page')>=0) newlinks[e]['GraceDB'] = { 'text': linkIn[l].text, 'url':linkIn[l].url, 'type': 'web-data' };
 					else if (linkIn[l].text.search('Final Skymap')>=0) newlinks[e]['SkyMapFile'] = { 'text': linkIn[l].text, 'url': linkIn[l].url, 'type': 'file' };
 					else if (linkIn[l].text.search('Skymap View')>=0) newlinks[e]['SkyMapAladin'] = { 'text': linkIn[l].text, 'url': linkIn[l].url, 'type': 'web' };
@@ -149,7 +149,7 @@ GWCat.prototype.loadData = function(){
 			if ((dataIn.links[e]) && (dataIn.links[e].LOSCData)){
 				link=dataIn.links[e].LOSCData;
 				link.url=link.url;
-				dataIn.data[e].link=link;
+				dataIn.data[e].opendata=link;
 			}
 			if ((dataIn.links[e]) && (dataIn.links[e].DetPaper)){
 				ref=dataIn.links[e].DetPaper;
@@ -314,6 +314,23 @@ GWCat.prototype.getError = function(event,param){
     else{return []}
 }
 
+GWCat.prototype.getPosError = function(event,param){
+    err=this.getValue(event,param,'err');
+    if (err){
+        // assumes positive error is the highest value
+        posErr=Math.max(...err)
+        return posErr}
+    else{return NaN}
+}
+GWCat.prototype.getNegError = function(event,param){
+    err=this.getValue(event,param,'err');
+    if (err){
+        // assumes negative error is the lower value
+        negErr=Math.min(...err)
+        return negErr}
+    else{return NaN}
+}
+
 GWCat.prototype.getNominal = function(event,param){
     valType=this.getParamType(event,param);
     if (valType=='lim'){
@@ -330,7 +347,7 @@ GWCat.prototype.getMinVal = function(event,param){
         return this.getLim(event,param)[0];
     }else if(valType=='best'){
         if (this.hasError(event,param)){
-            return this.getBest(event,param)-this.getError(event,param)[1];
+            return this.getBest(event,param)+this.getNegError(event,param);
         }else{
             return this.getBest(event,param);
         }
@@ -387,5 +404,34 @@ GWCat.prototype.paramUnit = function(param){
         return unit;
     }else{
         return '';
+    }
+}
+
+GWCat.prototype.getRef = function(event){
+    idx=this.event2idx(event);
+    param="ref";
+    try{
+        if (!this.data[idx].hasOwnProperty(param)){
+            warning='No known "'+param+'" in event '+event;
+            this.showWarning(warning);
+        }
+        return this.data[idx][param];
+    }catch(err){
+        this.checkEventParam(event,param,err.message);
+        return {};
+    }
+}
+GWCat.prototype.getOpenData = function(event){
+    idx=this.event2idx(event);
+    param="opendata";
+    try{
+        if (!this.data[idx].hasOwnProperty(param)){
+            warning='No known "'+param+'" in event '+event;
+            this.showWarning(warning);
+        }
+        return this.data[idx][param];
+    }catch(err){
+        this.checkEventParam(event,param,err.message);
+        return {};
     }
 }
