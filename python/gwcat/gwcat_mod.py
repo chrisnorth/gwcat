@@ -14,40 +14,50 @@ class GWCat(object):
     def json2dataframe(self):
         data=self.data
         ddIn=self.datadict
-        dOut={'unit':{},'description':{}}
+        ddOut={}
+        dataOut={}
         series={}
+        ddSeries={}
         self.cols=['Mchirp','M1','M2','Mtotal','Mfinal','Mratio','DL','z','deltaOmega','chi','af','Erad','lpeak','rho','FAR','UTC','GPS']
+        for d in self.cols:
+            ddOut[d]={}
+            if 'unit_en' in ddIn[d]:
+                ddOut[d]['unit']=ddIn[d]['unit_en']
+            if 'name_en' in ddIn[d]:
+                ddOut[d]['description']=ddIn[d]['name_en']
         for e in data:
-            dOut[e]={}
+            dataOut[e]={}
             for d in self.cols:
-                if ddIn[d].has_key('unit_en'):
-                    dOut['unit'][d]=ddIn[d]['unit_en']
-                if ddIn[d].has_key('name_en'):
-                    dOut['description'][d]=ddIn[d]['name_en']
-                if not data[e].has_key(d):
+                if d not in data[e]:
                     continue
-                if data[e][d].has_key('best'):
-                    dOut[e][d]=data[e][d]['best']
-                    if data[e][d].has_key('err'):
-                        dOut[e][d+'_errtype']='+/- (90%)'
-                        dOut[e][d+'_errp']=data[e][d]['err'][0]
-                        dOut[e][d+'_errm']=data[e][d]['err'][1]
-                    elif data[e][d].has_key('lim'):
-                        dOut[e][d+'_errtype']='+/- (range)'
-                        dOut[e][d+'_errp']=data[e][d]['lim'][0]
-                        dOut[e][d+'_errm']=data[e][d]['lim'][1]
-                elif data[e][d].has_key('lower'):
-                    dOut[e][d]=data[e][d]['lower']
-                    dOut[e][d+'_errtype']='lower_limit'
-                elif data[e][d].has_key('upper'):
-                    dOut[e][d]=data[e][d]['upper']
-                    dOut[e][d+'_errtype']='upper'
-        series['unit']=pd.Series(dOut['unit'],index=dOut['unit'].keys())
-        series['description']=pd.Series(dOut['description'],index=dOut['description'].keys())
+                if 'best' in data[e][d]:
+                    dataOut[e][d]=data[e][d]['best']
+                    if 'err' in data[e][d]:
+                        dataOut[e][d+'_valtype']='err'
+                        dataOut[e][d+'_errp']=data[e][d]['err'][0]
+                        dataOut[e][d+'_errm']=data[e][d]['err'][1]
+                    elif 'lim' in data[e][d]:
+                        dataOut[e][d+'_valtype']='range'
+                        dataOut[e][d+'_errp']=data[e][d]['lim'][0]
+                        dataOut[e][d+'_errm']=data[e][d]['lim'][1]
+                elif 'lower' in data[e][d]:
+                    dataOut[e][d]=data[e][d]['lower']
+                    dataOut[e][d+'_valtype']='lower_limit'
+                elif 'upper' in data[e][d]:
+                    dataOut[e][d]=data[e][d]['upper']
+                    dataOut[e][d+'_valtype']='upper'
 
-        rows=['description','unit']
+        for d in ddOut:
+            ddSeries[d]=pd.Series(ddOut[d],index=ddOut[d].keys())
+        # ddSeries['description']=pd.Series(ddOut['description'],index=ddOut['description'].keys())
+
+        ddFrame=pd.DataFrame(ddSeries)
+        self.units=ddFrame.T
+
+        # rows=['description','unit']
+        rows=[]
         for e in data:
-            series[e]=pd.Series(dOut[e],index=dOut[e].keys())
+            series[e]=pd.Series(dataOut[e],index=dataOut[e].keys())
             rows.append(e)
 
         df=pd.DataFrame(series)
@@ -63,11 +73,12 @@ class GWCat(object):
             print('Error finding value %s for parameter %s in event %s'%(value,param,event))
             return np.NaN
 
-    def exportCSV(self,fileout):
-        rows=['description','unit']
+    def exportCSV(self,datafileout,dictfileout=None):
+        # rows=['description','unit']
+        rows=[]
         for e in self.data:
             rows.append(e)
-
+        print(rows)
         colsAll=[]
         for c in self.cols:
             # print c
@@ -77,8 +88,8 @@ class GWCat(object):
             except:
                 pass
             try:
-                self.dataframe[c+'_errtype']
-                colsAll.append(c+'_errtype')
+                self.dataframe[c+'_valtype']
+                colsAll.append(c+'_valtype')
             except:
                 pass
             try:
@@ -92,5 +103,11 @@ class GWCat(object):
             except:
                 pass
         # print colsAll
-        pd.DataFrame(self.dataframe,index=rows).to_csv(fileout,columns=colsAll,encoding='utf8')
+        pd.DataFrame(self.dataframe,index=rows).to_csv(datafileout,columns=colsAll,encoding='utf8',index_label='Event')
+
+        if dictfileout!=None:
+            pd.DataFrame(self.units,index=self.cols).to_csv(dictfileout,columns=['description','unit'],encoding='utf8',index_label='Parameter')
         return
+
+    # def importCSV(self,filein):
+
