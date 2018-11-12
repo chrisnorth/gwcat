@@ -1,6 +1,7 @@
 import json
 import pandas as pd
 import numpy as np
+import os
 
 def compareElement(el1,el2,verbose=False):
     if type(el1)!=type(el2):
@@ -45,6 +46,7 @@ def dataframe2jsonEvent(evIn,params,verbose=False):
                 pv=evIn[param+'_valtype']
             except:
                 if verbose: print('ERROR: No valtype found for {}'.format(param))
+                pv=''
                 pass
             try:
                 np.isnan(pv)
@@ -85,7 +87,7 @@ class GWCat(object):
         # self.json2dataframe()
         return
 
-    def json2dataframe(self):
+    def json2dataframe(self,verbose=False):
         """Convert dictionaries into pandas DataFrames
         data -> events
         datadict -> units
@@ -133,8 +135,9 @@ class GWCat(object):
                 elif 'upper' in data[e][d]:
                     dataOut[d][e]=data[e][d]['upper']
                     dataOut[d+'_valtype'][e]='upper'
-            # convert to series
-            series[d]=pd.Series(dataOut[d],index=dataOut[d].keys())
+        # convert to series
+        for dOut in dataOut:
+            series[dOut]=pd.Series(dataOut[dOut],index=dataOut[dOut].keys())
             # rows.append(d)
         # combine into DataFrame
         events=pd.DataFrame(series).T
@@ -153,16 +156,25 @@ class GWCat(object):
                 linksSeries.append(pd.Series(linkOut))
         # combine into DataFrame
         eventrefs=pd.DataFrame(linksSeries).T
-        self.eventrefs=eventlinks
+        self.eventrefs=eventrefs
 
         return(events,units,eventrefs)
 
-    def dataframe2json(self,dataIn,unitsIn,linksin,mode,verbose=False):
-        """Convert pandas DataFrame objects into dictionaries. Used to read from CSV files
+    def dataframe2json(self,dataIn,unitsIn,linksIn,mode,verbose=False):
+        """Convert pandas DataFrame objects into dictionaries, merging with existing. Used to read from CSV files
         Inputs:
-            *
+            * dataIn [dictionary]: data for events (merge with data)
+            * unitsIn [dictionary]: units information (merge with datadict)
+            * linksIn [dictionary]: links information (merge with links)
+            * mode [string]: Mode to use:
+                - "replace": Remove and replace entire dataset from imports
+                - "update": Update existing data from imports
+                - "append": Append new events/parameters, leave existing events/parameters unchanged
         Outputs:
-            *
+            * Tuple of Dictionary:
+                - 0: data
+                - 1: datadict
+                - 2: links
         """
         paramsIn=unitsIn.index.tolist()
         eventsIn=dataIn.index.tolist()
@@ -177,49 +189,96 @@ class GWCat(object):
             self.events={}
             self.links={}
 
+        if verbose: print('\n*** Udating parameters ***')
         # create list of parameters
         for param in unitsInDict:
             # check parameters are in current database
             if param not in self.datadict:
-                print('Adding parameter %s'%(param))
+                if verbose: print('Adding parameter {}'.format(param))
+                self.datadict[param]=unitsInDict[param]
+            elif mode=="append":
+                # don't update existing parameter
+                if verbose: print('Mode=append. Skipping parameter {}'.format(param))
+                pass
+            else:
+                # replace existing parameter
+                if verbose: print('Updating parameter {}'.format(param))
                 self.datadict[param]=unitsInDict[param]
 
-        # update datadict
-
-        # update events dict
+        if verbose: print('\n*** Updating event data ***')
+        # update events dictionary
         for ev in eventsInDict:
-            if verbose: print('merging event {}'.format(ev))
-            event=dataframe2jsonEvent(eventsInDict[ev],paramsIn,verbose=verbose)
             if ev not in self.data:
                 # event is new
-                print('Adding event %s'%(ev))
-                self.data[ev]={}
+                if verbose: print('Adding event %s'%(ev))
+                event=dataframe2jsonEvent(eventsInDict[ev],paramsIn,verbose=verbose)
+                self.data[ev]=event
             else:
-                if mode!="update":
+                # event exists in data
+                if mode=="append":
                     # don't update existing events
-                    if verbose: print('Skipping event {}'.format(ev))
+                    if verbose: print('Mode=append. Skipping event {}'.format(ev))
                     pass
-                print('Comparing events {}'.format(ev))
-                for el in event:
-                    if el not in self.data[ev]:
-                        print ('Adding value {}'.format(el))
-                        self.data[ev][el]=event[el]
-                    else:
-                        if verbose: print('Comapring element {} for event {}'.format(el,ev))
-                        if not compareElement(self.data[ev][el],event[el],verbose=verbose):
-                            if verbose: print('Updating value {}'.format(el))
+                else:
+                    # update existing event
+                    if verbose: print('Merging events {}'.format(ev))
+                    event=dataframe2jsonEvent(eventsInDict[ev],paramsIn,verbose=verbose)
+                    for el in event:
+                        if el not in self.data[ev]:
+                            print ('Adding value {}'.format(el))
                             self.data[ev][el]=event[el]
                         else:
-                            if verbose: print('Keeping value {}'.format(el))
-                for el in self.data[ev]:
-                    if el not in event:
-                        # element existed, but not in input. Remove from dictionary
-                        self.data[ev].pop(el,None)
+                            if verbose: print('Comapring element {} for event {}'.format(el,ev))
+                            if not compareElement(self.data[ev][el],event[el],verbose=verbose):
+                                if verbose: print('Updating value {}'.format(el))
+                                self.data[ev][el]=event[el]
+                            else:
+                                if verbose: print('Keeping value {}'.format(el))
+                    for el in self.data[ev]:
+                        if el not in event:
+                            # element existed, but not in input.
+                            if mode=='replace':
+                                # Remove from dictionary
+                                self.data[ev].pop(el,None)
+
+        if verbose: print('\n*** Udating links ***')
+
+        # get current links
+        oldLinks=[]
+        newLinks=[]
+        skipLinks=[]
+        for ev in self.links:
+            oldLinks.append(ev)
 
         # update links
+        for l in linksInDict:
+            link=linksInDict[l]
+            ev=link['event']
+            if ev not in oldLinks and ev not in newLinks:
+                # event is new in links
+                if verbose: print('Adding links for event {}'.format(ev))
+                self.links[ev]=[]
 
+            if mode=="append":
+                # don't update existing events
+                if ev not in skipLinks:
+                    if verbose: print('Skipping event {}'.format(ev))
+                    skipLinks.append(ev)
+                pass
+            else:
+                if ev not in newLinks:
+                    # links haven't been replaced yet for this event
+                    if verbose: print('Updating links for event {}'.format(ev))
+                    self.links[ev]=[]
+                    newLinks.append(ev)
+                # add link to links-list for event
+                newLink={}
+                for key in link:
+                    if key!='event' and link[key]!='':
+                        newLink[key]=link[key]
+                self.links[ev].append(newLink)
 
-        return(self.data,self,datadict,self.links)
+        return(self.data,self.datadict,self.links)
 
 
     def getValue(self,event,param,value):
@@ -229,20 +288,49 @@ class GWCat(object):
             print('Error finding value %s for parameter %s in event %s'%(value,param,event))
             return np.NaN
 
-    def exportCSV(self,datafileout,dictfileout=None):
-        dataframe,units = self.json2dataframe()
-        dataframe.transpose().to_csv(datafileout,encoding='utf8',index_label='Event')
+    def exportJson(self,fileout,dir='',verbose=False):
+        """Export parameters, data and links to single JSON file
+        Inputs:
+            * fileout [string]: filename to write all data to
+            * dir [string OPTIONAL]: directory to write files to. Default=''
+        """
+        alldata={'datadict':self.datadict,'data':self.data,'links':self.links}
+        if verbose: print('Writing data to JSON: {}'.format(os.path.join(dir,fileout)))
+        json.dump(alldata,open(os.path.join(dir,fileout),'w'),indent=4)
+
+
+        return()
+
+    def exportCSV(self,datafileout,dictfileout=None,linksfileout=None,dir='',verbose=False):
+        """Export data to CSV file(s)
+        Inputs:
+            * datafileout [string]: filename to write events data to
+            * dictfileout [string, OPTIONAL]: filename to write data dictionary to. Default: do not export
+            * linksfileout [string OPTIONAL]: filename to write references to. Default: to not export
+            * dir [string OPTIONAL]: directory to write files to. Default=''
+        """
+        (dataframe,units,links) = self.json2dataframe(verbose=verbose)
+
+        if verbose: print('Writing data to CSV: {}'.format(os.path.join(dir,datafileout)))
+        dataframe.transpose().to_csv(os.path.join(dir,datafileout),encoding='utf8',index_label='Event')
 
         if dictfileout!=None:
-            units.to_csv(dictfileout,encoding='utf8',index_label='Parameter')
-        return
+            if verbose: print('Writing datadict to CSV: {}'.format(os.path.join(dir,dictfileout)))
+            units.to_csv(os.path.join(dir,dictfileout),encoding='utf8',index_label='Parameter')
 
-    def importCSV(self,datafilein,dictfilein=None,linkfile=None,mode=None):
+        if linksfileout!=None:
+            if verbose: print('Writing links to CSV:{}'.format(os.path.join(dir,linksfileout)))
+            links.transpose().to_csv(os.path.join(dir,linksfileout),encoding='utf8',index_label='Ref')
+
+        return()
+
+    def importCSV(self,datafilein,dictfilein=None,linksfilein=None,dir='',mode=None,verbose=False):
         """Read CSV file of data and replace in database
         Inputs:
             * datafilein [string]: filename of events data file to read in
             * dictfilein [string, OPTIONAL]: filename of data dictionary to read in
             * linkfile [string OPTIONAL]: filename of references csv file to read in
+            * dir [string OPTIONAL]: directory to read from. Default=''
             * mode [string, OPTIONAL]: import mode [replace,update,append]
                 - replace: replace entire dataset with input data
                 - update: update existing events and add new events [default]
@@ -254,13 +342,20 @@ class GWCat(object):
             mode='update'
 
         # read CSV files
-        datain=pd.read_csv(datafilein,index_col=0)
+        if verbose: print('Reading data from {}'.format(os.path.join(dir,datafilein)))
+        datain=pd.read_csv(os.path.join(dir,datafilein),index_col=0)
         if dictfilein!=None:
-            unitsin=pd.read_csv(dictfilein,index_col=0)
+            if verbose: print('Reading data dict from {}'.format(os.path.join(dir,dictfilein)))
+            unitsin=pd.read_csv(os.path.join(dir,dictfilein),index_col=0)
         else:
             unitsin=self.units
-        if linkfilein!=None:
-            linksin=pd.read_csv(linkfilein,index_col=0)
+        if linksfilein!=None:
+            if verbose: print('Reading links from {}'.format(os.path.join(dir,linksfilein)))
+            linksin=pd.read_csv(os.path.join(dir,linksfilein),index_col=0)
         else:
             linksin=self.links
-        self.dataframe2json(datain,unitsin,linksin,verbose=True,mode=mode)
+
+        # merge imports with existing
+        self.dataframe2json(datain,unitsin,linksin,mode=mode,verbose=verbose)
+
+        return()
