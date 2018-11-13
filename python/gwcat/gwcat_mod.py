@@ -324,6 +324,29 @@ class GWCat(object):
 
         return()
 
+    def exportExcel(self,fileout,dir='',verbose=False):
+        """Export datadict, events data and links to CSV file(s)
+        Inputs:
+            * fileout [string]: filename to write all data to
+            * dir [string OPTIONAL]: directory to write files to. Default=''
+        """
+        (dataframe,units,links) = self.json2dataframe(verbose=verbose)
+
+        writer=pd.ExcelWriter(os.path.join(dir,fileout),engine='xlsxwriter')
+
+        if verbose: print('Writing data to Excel: {}'.format(os.path.join(dir,fileout)))
+        dataframe.transpose().to_excel(writer,sheet_name='Events',encoding='utf8',index_label='Event')
+
+        if verbose: print('Writing datadict to Excel: {}'.format(os.path.join(dir,fileout)))
+        units.to_excel(writer,sheet_name='Parameters',encoding='utf8',index_label='Parameter')
+
+        if verbose: print('Writing links to Excel:{}'.format(os.path.join(dir,fileout)))
+        links.transpose().to_excel(writer,sheet_name='Links',encoding='utf8',index_label='Ref')
+
+        writer.save()
+
+        return()
+
     def importCSV(self,datafilein,dictfilein=None,linksfilein=None,dir='',mode=None,verbose=False):
         """Read CSV file of data and replace in database
         Inputs:
@@ -354,6 +377,40 @@ class GWCat(object):
             linksin=pd.read_csv(os.path.join(dir,linksfilein),index_col=0)
         else:
             linksin=self.links
+
+        # merge imports with existing
+        self.dataframe2json(datain,unitsin,linksin,mode=mode,verbose=verbose)
+
+        return()
+
+    def importExcel(self,filein,dir='',sheet_events='Events',sheet_dict='Parameters',sheet_links='Links',mode=None,verbose=False):
+        """Read Excel file of data and replace in database
+        Inputs:
+            * filein [string]: filename of data file to read in from
+            * sheet_events [string, OPTIONAL]: sheet name for events data. Default="Events"
+            * sheet_dict [string, OPTIONAL]: sheet name for parameters data. Default="Parameters"
+            * sheet_links [string, OPTIONAL]: sheet name for links data. Default="Links"
+            * dir [string OPTIONAL]: directory to read from. Default=''
+            * mode [string, OPTIONAL]: import mode [replace,update,append]
+                - replace: replace entire dataset with input data
+                - update: update existing events and add new events [default]
+                - append: add new events, leave existing events unchanged
+        """
+
+        # set mode to default if not set
+        if mode==None:
+            mode='update'
+
+        # read Excel file
+        if verbose: print('Reading data from {}'.format(os.path.join(dir,filein)))
+        datain=pd.read_excel(os.path.join(dir,filein),sheet_name='Events',index_col=0)
+
+        if verbose: print('Reading data dict from {}'.format(os.path.join(dir,filein)))
+        unitsin=pd.read_excel(os.path.join(dir,filein),sheet_name='Parameters',index_col=0)
+
+        if verbose: print('Reading links from {}'.format(os.path.join(dir,filein)))
+        linksin=pd.read_excel(os.path.join(dir,filein),sheet_name='Links',index_col=0)
+
 
         # merge imports with existing
         self.dataframe2json(datain,unitsin,linksin,mode=mode,verbose=verbose)
