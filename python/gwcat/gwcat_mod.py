@@ -84,7 +84,7 @@ class GWCat(object):
         self.datadict=eventsIn['datadict']
         self.cols=list(self.datadict.keys())
         self.links=eventsIn['links']
-        # self.json2dataframe()
+        self.json2dataframe()
         return
 
     def json2dataframe(self,verbose=False):
@@ -176,12 +176,12 @@ class GWCat(object):
                 - 1: datadict
                 - 2: links
         """
-        paramsIn=unitsIn.index.tolist()
-        eventsIn=dataIn.index.tolist()
+        paramsIn=list(unitsIn.keys())
+        eventsIn=list(dataIn.keys())
 
-        eventsInDict=dataIn.to_dict(orient='index')
-        unitsInDict=unitsIn.to_dict(orient='index')
-        linksInDict=linksIn.to_dict(orient='index')
+        # eventsInDict=dataIn.to_dict(orient='index')
+        # unitsInDict=unitsIn.to_dict(orient='index')
+        # linksInDict=linksIn.to_dict()
 
         if mode=='replace':
             # remove existing dataset
@@ -191,11 +191,20 @@ class GWCat(object):
 
         if verbose: print('\n*** Udating parameters ***')
         # create list of parameters
-        for param in unitsInDict:
+        for param in unitsIn:
             # check parameters are in current database
             if param not in self.datadict:
                 if verbose: print('Adding parameter {}'.format(param))
-                self.datadict[param]=unitsInDict[param]
+                self.datadict[param]={}
+                for k in unitsIn[param]:
+                    try:
+                        if np.isnan(unitsIn[param][k]):
+                            continue
+                    except:
+                        pass
+                    print('adding',param,k)
+                    if not unitsIn[param][k]=='':
+                        self.datadict[param][k]=unitsIn[param][k]
             elif mode=="append":
                 # don't update existing parameter
                 if verbose: print('Mode=append. Skipping parameter {}'.format(param))
@@ -203,15 +212,24 @@ class GWCat(object):
             else:
                 # replace existing parameter
                 if verbose: print('Updating parameter {}'.format(param))
-                self.datadict[param]=unitsInDict[param]
+                self.datadict[param]={}
+                for k in unitsIn[param]:
+                    try:
+                        if np.isnan(unitsIn[param][k]):
+                            continue
+                    except:
+                        pass
+                    print('updating',param,k)
+                    if not unitsIn[param][k]=='':
+                        self.datadict[param][k]=unitsIn[param][k]
 
         if verbose: print('\n*** Updating event data ***')
         # update events dictionary
-        for ev in eventsInDict:
+        for ev in eventsIn:
             if ev not in self.data:
                 # event is new
                 if verbose: print('Adding event %s'%(ev))
-                event=dataframe2jsonEvent(eventsInDict[ev],paramsIn,verbose=verbose)
+                event=dataframe2jsonEvent(dataIn[ev],paramsIn,verbose=verbose)
                 self.data[ev]=event
             else:
                 # event exists in data
@@ -222,7 +240,7 @@ class GWCat(object):
                 else:
                     # update existing event
                     if verbose: print('Merging events {}'.format(ev))
-                    event=dataframe2jsonEvent(eventsInDict[ev],paramsIn,verbose=verbose)
+                    event=dataframe2jsonEvent(dataIn[ev],paramsIn,verbose=verbose)
                     for el in event:
                         if el not in self.data[ev]:
                             print ('Adding value {}'.format(el))
@@ -251,8 +269,8 @@ class GWCat(object):
             oldLinks.append(ev)
 
         # update links
-        for l in linksInDict:
-            link=linksInDict[l]
+        for l in linksIn:
+            link=linksIn[l]
             ev=link['event']
             if ev not in oldLinks and ev not in newLinks:
                 # event is new in links
@@ -274,6 +292,11 @@ class GWCat(object):
                 # add link to links-list for event
                 newLink={}
                 for key in link:
+                    try:
+                        if np.isnan(link[key]):
+                            continue
+                    except:
+                        pass
                     if key!='event' and link[key]!='':
                         newLink[key]=link[key]
                 self.links[ev].append(newLink)
@@ -366,15 +389,15 @@ class GWCat(object):
 
         # read CSV files
         if verbose: print('Reading data from {}'.format(os.path.join(dir,datafilein)))
-        datain=pd.read_csv(os.path.join(dir,datafilein),index_col=0)
+        datain=pd.read_csv(os.path.join(dir,datafilein),index_col=0).to_dict(orient='index')
         if dictfilein!=None:
             if verbose: print('Reading data dict from {}'.format(os.path.join(dir,dictfilein)))
-            unitsin=pd.read_csv(os.path.join(dir,dictfilein),index_col=0)
+            unitsin=pd.read_csv(os.path.join(dir,dictfilein),index_col=0).to_dict(orient='index')
         else:
-            unitsin=self.units
+            unitsin=self.datadict
         if linksfilein!=None:
             if verbose: print('Reading links from {}'.format(os.path.join(dir,linksfilein)))
-            linksin=pd.read_csv(os.path.join(dir,linksfilein),index_col=0)
+            linksin=pd.read_csv(os.path.join(dir,linksfilein),index_col=0).to_dict(orient='index')
         else:
             linksin=self.links
 
@@ -403,13 +426,13 @@ class GWCat(object):
 
         # read Excel file
         if verbose: print('Reading data from {}'.format(os.path.join(dir,filein)))
-        datain=pd.read_excel(os.path.join(dir,filein),sheet_name='Events',index_col=0)
+        datain=pd.read_excel(os.path.join(dir,filein),sheet_name='Events',index_col=0).to_dict(orient='index')
 
         if verbose: print('Reading data dict from {}'.format(os.path.join(dir,filein)))
-        unitsin=pd.read_excel(os.path.join(dir,filein),sheet_name='Parameters',index_col=0)
+        unitsin=pd.read_excel(os.path.join(dir,filein),sheet_name='Parameters',index_col=0).to_dict(orient='index')
 
         if verbose: print('Reading links from {}'.format(os.path.join(dir,filein)))
-        linksin=pd.read_excel(os.path.join(dir,filein),sheet_name='Links',index_col=0)
+        linksin=pd.read_excel(os.path.join(dir,filein),sheet_name='Links',index_col=0).to_dict(orient='index')
 
 
         # merge imports with existing
