@@ -5,7 +5,7 @@
 	    "UTC":{"name": "%data.UTC.name%", "priority": 1, "sigfig": 0,
 	         "type": "varchar", "err": 0,"name_en":"UTC"},
 	    "rho":{"name": "%data.rho.name%", "priority": 3, "sigfig": 3,
-	         "err": 0, "name_en":"Signal to Noise ratio"},
+	         "err": 0, "name_en":"Signal to Noise ratio (Network)"},
 	    "FAR":{"name": "%data.FAR.name%", "priority": 1, "sigfig": 2,
 	         "unit": "%data.FAR.unit%", "err": 0, "name_en":"False alarm rate", "unit_en":"yr^-1"},
 	    "sigma":{"name": "%data.sigma.name%", "priority": 6, "sigfig": 2,
@@ -37,8 +37,7 @@
 	    "deltaOmega":{"name": "%data.skyArea.name%", "priority": 5, "sigfig": 2,
 	        "unit": "%data.skyArea.unit%", "err": 0, "name_en":"Sky localization area","unit_en":"deg^2"},
 		"obsrun":{"name": "%data.obsrun.name","priority":5, "sigfig":0,"err":0,"name_en":"Observing run"},
-		"net":{"name": "%data.net.name","priority":5, "sigfig":0,"err":0,"name_en":"Detector network"},
-		"rho":{"name": "%data.rho.name","priority":5, "sigfig":0,"err":0,"name_en":"Signal to noise network"}
+		"net":{"name": "%data.net.name","priority":5, "sigfig":0,"err":0,"name_en":"Detector network"}
 	},
 	"data": {
 		"GW150914": {
