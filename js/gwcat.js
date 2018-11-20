@@ -132,6 +132,7 @@ GWCat.prototype.loadData = function(){
 			}
 		}
 		dataIn.links=newlinks;
+        _gw.links=dataIn.links;
 		for (e in dataIn.data){
 			dataIn.data[e].name=e;
 			if (dataIn.data[e].type){
