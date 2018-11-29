@@ -11,23 +11,23 @@ def compareElement(el1,el2,verbose=False):
     elif type(el1)==dict and type(el2)==dict:
         for el in el1:
             if el in el2:
-                if verbose: print('Comparing elements {}'.format(el))
+                # if verbose: print('Comparing elements {}'.format(el))
                 return(compareElement(el1[el],el2[el],verbose=verbose))
             else:
-                if verbose: print('element {} not in dict 2'.format(el))
+                # if verbose: print('element {} not in dict 2'.format(el))
                 return(False)
         for el in el2:
             if el not in el1:
-                if verbose: print('element {} not in dict 1'.format(el))
+                # if verbose: print('element {} not in dict 1'.format(el))
                 return(False)
     else:
         try:
             # if verbose: print('Comparing elements {}'.format(el1))
             if el1==el2:
-                if verbose: print('{}=={}'.format(el1,el2))
+                # if verbose: print('{}=={}'.format(el1,el2))
                 return(True)
             else:
-                if verbose: print('{}!={}'.format(el1,el2))
+                # if verbose: print('{}!={}'.format(el1,el2))
                 return(False)
         except:
             print('ERROR: unable to compare [{} , {}] / [{},{}]'.format(el1,el2),type(el1),type(el2))
@@ -185,9 +185,16 @@ class GWCat(object):
 
         if mode=='replace':
             # remove existing dataset
-            self.datadict={}
-            self.events={}
-            self.links={}
+            if verbose:print('Removing existing data')
+            for k in list(self.datadict.keys()):
+                if verbose: print('Removing parameter {}'.format(k))
+                self.datadict.pop(k,None)
+            for k in list(self.data.keys()):
+                if verbose: print('Removing event {}'.format(k))
+                self.data.pop(k,None)
+            for k in list(self.links.keys()):
+                if verbose: print('Removing links {}'.format(k))
+                self.links.pop(k,None)
 
         if verbose: print('\n*** Udating parameters ***')
         # create list of parameters
@@ -202,7 +209,6 @@ class GWCat(object):
                             continue
                     except:
                         pass
-                    print('adding',param,k)
                     if not unitsIn[param][k]=='':
                         self.datadict[param][k]=unitsIn[param][k]
             elif mode=="append":
@@ -219,7 +225,6 @@ class GWCat(object):
                             continue
                     except:
                         pass
-                    print('updating',param,k)
                     if not unitsIn[param][k]=='':
                         self.datadict[param][k]=unitsIn[param][k]
 
@@ -243,16 +248,17 @@ class GWCat(object):
                     event=dataframe2jsonEvent(dataIn[ev],paramsIn,verbose=verbose)
                     for el in event:
                         if el not in self.data[ev]:
-                            print ('Adding value {}'.format(el))
+                            if verbose: print ('Adding value {}'.format(el))
                             self.data[ev][el]=event[el]
                         else:
-                            if verbose: print('Comapring element {} for event {}'.format(el,ev))
+                            if verbose: print('Merging element {} for event {}'.format(el,ev))
                             if not compareElement(self.data[ev][el],event[el],verbose=verbose):
-                                if verbose: print('Updating value {}'.format(el))
+                                # if verbose: print('Updating value {}'.format(el))
                                 self.data[ev][el]=event[el]
                             else:
-                                if verbose: print('Keeping value {}'.format(el))
-                    for el in self.data[ev]:
+                                pass
+                                # if verbose: print('Keeping value {}'.format(el))
+                    for el in list(self.data[ev].keys()):
                         if el not in event:
                             # element existed, but not in input.
                             if mode=='replace':
@@ -300,6 +306,9 @@ class GWCat(object):
                     if key!='event' and link[key]!='':
                         newLink[key]=link[key]
                 self.links[ev].append(newLink)
+
+        # put back into dataframe structures
+        self.json2dataframe()
 
         return(self.data,self.datadict,self.links)
 
@@ -406,7 +415,7 @@ class GWCat(object):
 
         return()
 
-    def importExcel(self,filein,dir='',sheet_events='Events',sheet_dict='Parameters',sheet_links='Links',mode=None,verbose=False):
+    def importExcel(self,filein,dir='',sheet_events='Events',sheet_dict='Parameters',sheet_links='Links',mode='update',verbose=False):
         """Read Excel file of data and replace in database
         Inputs:
             * filein [string]: filename of data file to read in from
