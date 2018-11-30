@@ -172,7 +172,7 @@ earliestGW();</div>// Expect: <span class="expect">GW150914</span><br />// Retur
 			}
 			S('#message').html('It loads! :-) <a href="#tests">Passed '+pass+' of '+n+' tests</a>');
 		}
-		var gwcat = new GWCat(runTests);
+		var gwcat = new GWCat(runTests,{loadMethod:'gwosc'});
 	</script>
 </body>
 </html>

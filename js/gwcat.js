@@ -13,6 +13,7 @@ GWCat.prototype.init = function(){
     this.log('inp',this.inp);
     this.debug = (this.inp && this.inp.debug) ? this.inp.debug : true;
     this.fileIn = (this.inp && this.inp.fileIn) ? this.inp.fileIn : "data/events.json";
+    this.gwoscIn = (this.inp && this.inp.gwoscIn) ? this.inp.gwoscIn : "gwosc/gwosc.json";
     this.loadMethod = (this.inp && this.inp.loadMethod) ? this.inp.loadMethod : "";
     return this;
 }
@@ -26,6 +27,23 @@ GWCat.prototype.log = function(){
 GWCat.prototype.callbackDefault = function(){
     this.log('Successfully loaded data');
 	return this;
+}
+GWCat.prototype.setLinks = function(){
+    data=this.datagwosc;
+    for (i in this.data){
+        e=data[i].name;
+        if ((this.links[e]) && (this.links[e].LOSCData)){
+            link=this.links[e].LOSCData;
+            link.url=link.url;
+            data[i].opendata=link;
+        }
+        if ((this.links[e]) && (this.links[e].DetPaper)){
+            ref=this.links[e].DetPaper;
+            ref.url=ref.url;
+            data[i].ref=ref;
+        }
+    }
+    return this;
 }
 
 GWCat.prototype.loadData = function(){
@@ -169,7 +187,68 @@ GWCat.prototype.loadData = function(){
 			return _gw.callback(_gw);
 		}
 	}
-
+    function parseGWOSC(gwoscData,attr,_gw){
+        _gw.gwoscIn=gwoscData;
+        gwosc2cat={
+            'M1':function(d){return ((d.mass1) ? d.mass1 : null);},
+            'M2':function(d){return ((d.mass2) ? d.mass2 : null);},
+            'Erad':function(d){return ((d.E_rad) ? d.E_rad : null);},
+            'lpeak':function(d){return ((d.L_peak) ? d.L_peak : null);},
+            'DL':function(d){return ((d.distance) ? d.distance : null);},
+            'z':function(d){return ((d.redshift) ? d.redshift : null);},
+            'deltaOmega':function(d){return ((d.sky_size) ? d.sky_size : null);},
+            'Mfinal':function(d){return ((d.mfinal) ? d.mfinal : null);},
+            'Mchirp':function(d){return ((d.mchirp) ? d.mchirp : null);},
+            'chi':function(d){return ((d.chi_eff) ? d.chi_eff : null);},
+            'af':function(d){return ((d.a_final) ? d.a_final : null);},
+            'GPS':function(d){return ((d.tc) ? d.tc : null);},
+            'obsrun':function(d){return ((d.files.ObsRun) ? {'best':d.files.ObsRun} : null);},
+            'net':function(d){return ((d.files.OperatingIFOs) ? {'best':d.files.OperatingIFOs} : null);},
+            'name':function(d){return ((d.files.eventName) ? d.files.eventName : null)},
+            'type':function(d){return ((d.files.eventName[0]=='G') ? 'GW' : 'LVT')},
+            'conf':function(d){return ((d.files.eventName[0]=='G') ? 'GW' : 'LVT')},
+            'objType':function(d){return {'best':((d.mass1.best<3)&(d.mass1.best)<3) ? 'BNS' : 'BBH'};},
+            'UTC':function(d){
+                utcin=new Date(d.files.PeakAmpUTC.replace(/\.(.*)UTC/g,' GMT+0000'));
+                month=(utcin.getUTCMonth()<9) ? '0'+String(utcin.getUTCMonth()+1) : String(utcin.getUTCMonth()+1);
+                date=(utcin.getUTCDate()<10) ? '0'+String(utcin.getUTCDate()) : String(utcin.getUTCDate());
+                utcout=utcin.getUTCFullYear()+'-'+month+'-'+date+'T'+d.utctime.best;
+                return {'best':utcout};
+            },
+            'FAR':function(d){
+                if (d.far_pycbc.best!="NA") return {'best':d.far_pycbc,'fartype':'pycbc'};
+                if (d.far_gstlal.best!="NA") return {'best':d.far_gstlal,'fartype':'gstlal'};
+                if (d.far_cwb.best!="NA") return {'best':d.far_cwb,'fartype':'cwb'};
+            },
+            'rho':function(d){
+                if (d.snr_pycbc.best!="NA") return {'best':d.snr_pycbc,'fartype':'pycbc'};
+                if (d.snr_gstlal.best!="NA") return {'best':d.snr_gstlal,'fartype':'gstlal'};
+                if (d.smr_cwb.best!="NA") return {'best':d.snr_cwb,'fartype':'cwb'};
+            }
+        }
+        _gw.datagwosc=[];
+        for (e in gwoscData.data){
+            ev=gwoscData.data[e];
+            evNew={};
+            for (k in gwosc2cat){
+                param=gwosc2cat[k](ev);
+                if (!param.best){evNew[k]=param;}
+                else if ((!param.err)&&(param.best)){evNew[k]={'best':param.best};}
+                else if (param.err=="upperbound"){evNew[k]={"upper":param.best};}
+                else if (param.err=="lowerbound"){evNew[k]={"lower":param.best};}
+                else{evNew[k]={"best":param.best,"err":param.err}}
+            }
+            _gw.datagwosc.push(evNew);
+        }
+        console.log(_gw.datagwosc[0]);
+        if(_gw.debug){ _gw.log('GWOSC data loaded via internal:',_gw.gwoscdata); }
+        if (loaded==toLoad){
+            _gw.data=_gw.datagwosc;
+            _gw.setLinks();
+			_gw.orderData('GPS');
+			return _gw.callback(_gw);
+		}
+    }
 	// Load the data file
     if (!this.loadMethod){
 		ajax(this.fileIn,{
@@ -184,6 +263,31 @@ GWCat.prototype.loadData = function(){
 			}
 		});
 
+    } else if (this.loadMethod=="gwosc"){
+        // need to also load GWOSC data as well
+        this.toLoad += 1;
+        this.gwoscdata=[];
+        ajax(this.fileIn,{
+			"dataType": "json",
+			"this": this,
+			"error": function(error,attr) {
+				this.log('events error:',error,attr);
+				//alert("Fatal error loading input file: '"+attr.url+"'. Sorry!");
+			},
+			"success": function(dataIn,attr){
+				parseData(dataIn,attr,this);
+			}
+		});
+        ajax(this.gwoscIn,{
+            "dataType": "json",
+			"this": this,
+			"error": function(error,attr) {
+				this.log('gwosc events error:',error,attr);
+            },
+            "success": function(gwoscData,attr){
+                parseGWOSC(gwoscData,attr,this);
+            }
+        })
     } else if (this.loadMethod=="d3"){
         d3.json(_gw.fileIn, function(error, dataIn) {
             if (error){
@@ -365,7 +469,7 @@ GWCat.prototype.getMaxVal = function(event,param){
         return this.getLim(event,param)[1];
     }else if(valType=='best'){
         if (this.hasError(event,param)){
-            return this.getBest(event,param)+this.getError(event,param)[0];
+            return this.getBest(event,param)+this.getPosError(event,param);
         }else{
             return this.getBest(event,param);
         }
