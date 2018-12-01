@@ -12,8 +12,9 @@ GWCat.prototype.init = function(){
     // set default parameters
     this.log('inp',this.inp);
     this.debug = (this.inp && this.inp.debug) ? this.inp.debug : true;
+    this.datasrc = (this.inp && this.inp.datasrc) ? this.inp.datasrc : "local";
     this.fileIn = (this.inp && this.inp.fileIn) ? this.inp.fileIn : "data/events.json";
-    this.gwoscIn = (this.inp && this.inp.gwoscIn) ? this.inp.gwoscIn : "gwosc/gwosc.json";
+    this.gwoscFile = (this.inp && this.inp.gwoscFile) ? this.inp.gwoscFile : "gwosc/gwosc.json";
     this.loadMethod = (this.inp && this.inp.loadMethod) ? this.inp.loadMethod : "";
     return this;
 }
@@ -241,7 +242,7 @@ GWCat.prototype.loadData = function(){
             _gw.datagwosc.push(evNew);
         }
         console.log(_gw.datagwosc[0]);
-        if(_gw.debug){ _gw.log('GWOSC data loaded via internal:',_gw.gwoscdata); }
+        if(_gw.debug){ _gw.log('GWOSC data loaded:',_gw.datagwosc); }
         if (loaded==toLoad){
             _gw.data=_gw.datagwosc;
             _gw.setLinks();
@@ -250,7 +251,7 @@ GWCat.prototype.loadData = function(){
 		}
     }
 	// Load the data file
-    if (!this.loadMethod){
+    if (this.datasrc=='local'){
 		ajax(this.fileIn,{
 			"dataType": "json",
 			"this": this,
@@ -263,7 +264,7 @@ GWCat.prototype.loadData = function(){
 			}
 		});
 
-    } else if (this.loadMethod=="gwosc"){
+    } else if (this.datasrc=="gwosc"){
         // need to also load GWOSC data as well
         this.toLoad += 1;
         this.gwoscdata=[];
@@ -278,7 +279,7 @@ GWCat.prototype.loadData = function(){
 				parseData(dataIn,attr,this);
 			}
 		});
-        ajax(this.gwoscIn,{
+        ajax(this.gwoscFile,{
             "dataType": "json",
 			"this": this,
 			"error": function(error,attr) {
@@ -287,7 +288,16 @@ GWCat.prototype.loadData = function(){
             "success": function(gwoscData,attr){
                 parseGWOSC(gwoscData,attr,this);
             }
-        })
+        });
+        // this.testFile="https://www.gw-openscience.org/archive/links/O1/L1/1126051217/1127051217/json/";
+        // d3.json(this.testFile, function(error, dataIn) {
+        //     if (error){
+        //         console.log('events error:',error,dataIn);
+        //         alert("Fatal error loading test file: '"+this.testFile+"'. Sorry!");
+        //     } else {
+	    //         this.log('testData:',testData);
+	    //     }
+        // });
     } else if (this.loadMethod=="d3"){
         d3.json(_gw.fileIn, function(error, dataIn) {
             if (error){
