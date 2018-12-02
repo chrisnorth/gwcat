@@ -11,17 +11,20 @@ function GWCat(callback,inp){
 GWCat.prototype.init = function(){
     // set default parameters
     this.log('inp',this.inp);
-    this.debug = (this.inp && this.inp.debug) ? this.inp.debug : true;
+    // console.log('inp',this.inp);
+    this.debug = (this.inp && (this.inp.debug||this.inp.debug==false)) ? this.inp.debug : true;
+    // console.log('debug',this.debug);
     this.datasrc = (this.inp && this.inp.datasrc) ? this.inp.datasrc : "local";
     this.fileIn = (this.inp && this.inp.fileIn) ? this.inp.fileIn : "data/events.json";
     this.gwoscFile = (this.inp && this.inp.gwoscFile) ? this.inp.gwoscFile : "gwosc/gwosc.json";
+    console.log(this.gwoscFile)
     this.loadMethod = (this.inp && this.inp.loadMethod) ? this.inp.loadMethod : "";
     return this;
 }
 
 GWCat.prototype.log = function(){
 	var args = Array.prototype.slice.call(arguments, 0);
-	if(console && typeof console.log==="function") console.log('GWCat',args);
+	if(console && typeof console.log==="function" && this.debug) console.log('GWCat',args);
 	return this;
 }
 
@@ -30,7 +33,8 @@ GWCat.prototype.callbackDefault = function(){
 	return this;
 }
 GWCat.prototype.setLinks = function(){
-    data=this.datagwosc;
+    data=this.data;
+    this.log('setting links',this.links)
     for (i in this.data){
         e=data[i].name;
         if ((this.links[e]) && (this.links[e].LOSCData)){
@@ -43,15 +47,17 @@ GWCat.prototype.setLinks = function(){
             ref.url=ref.url;
             data[i].ref=ref;
         }
+        this.log('links set for',e,this.data[i])
     }
+
     return this;
 }
 
 GWCat.prototype.loadData = function(){
     var _gw = this;
     // load external data
-    var toLoad=1;
-    var loaded=0;
+    _gw.toLoad=1;
+    _gw.loaded=0;
     this.length = 0;	// Quick alias for length of catalogue
     this.data=[];
 
@@ -133,7 +139,7 @@ GWCat.prototype.loadData = function(){
 	} // End default ajax() function
 
 	function parseData(dataIn,attr,_gw){
-		loaded++;
+		_gw.loaded++;
 		_gw.datadict=dataIn.datadict;
 		newlinks={}
 		for (e in dataIn.data){
@@ -149,6 +155,7 @@ GWCat.prototype.loadData = function(){
 					else if (linkIn[l].text.search('Skymap View')>=0) newlinks[e]['SkyMapAladin'] = { 'text': linkIn[l].text, 'url': linkIn[l].url, 'type': 'web' };
 				}
 			}
+            _gw.log('processing links for ',e,newlinks[e]);
 		}
 		dataIn.links=newlinks;
         _gw.links=dataIn.links;
@@ -182,13 +189,14 @@ GWCat.prototype.loadData = function(){
 		// Quick alias for length
 		_gw.length = _gw.data.length;
 
-		if(_gw.debug){ _gw.log('data loaded via internal:',_gw.data); }
-		if (loaded==toLoad){
+		_gw.log(_gw.loaded+'/'+_gw.toLoad+'local data loaded:',_gw.data);
+		if (_gw.loaded==_gw.toLoad){
 			_gw.orderData('GPS');
 			return _gw.callback(_gw);
 		}
 	}
     function parseGWOSC(gwoscData,attr,_gw){
+        _gw.loaded++
         _gw.gwoscIn=gwoscData;
         gwosc2cat={
             'M1':function(d){return ((d.mass1) ? d.mass1 : null);},
@@ -241,9 +249,9 @@ GWCat.prototype.loadData = function(){
             }
             _gw.datagwosc.push(evNew);
         }
-        console.log(_gw.datagwosc[0]);
-        if(_gw.debug){ _gw.log('GWOSC data loaded:',_gw.datagwosc); }
-        if (loaded==toLoad){
+        _gw.log(_gw.datagwosc[0]);
+        _gw.log(_gw.loaded+'/'+_gw.toLoad+'GWOSC data loaded:',_gw.datagwosc);
+        if (_gw.loaded==_gw.toLoad){
             _gw.data=_gw.datagwosc;
             _gw.setLinks();
 			_gw.orderData('GPS');
@@ -267,6 +275,8 @@ GWCat.prototype.loadData = function(){
     } else if (this.datasrc=="gwosc"){
         // need to also load GWOSC data as well
         this.toLoad += 1;
+        this.log('toLoad:',this.toLoad)
+        this.log('reading default')
         this.gwoscdata=[];
         ajax(this.fileIn,{
 			"dataType": "json",
@@ -276,9 +286,11 @@ GWCat.prototype.loadData = function(){
 				//alert("Fatal error loading input file: '"+attr.url+"'. Sorry!");
 			},
 			"success": function(dataIn,attr){
+                this.log('fileIn',dataIn)
 				parseData(dataIn,attr,this);
 			}
 		});
+        this.log('reading gwosc')
         ajax(this.gwoscFile,{
             "dataType": "json",
 			"this": this,
@@ -286,6 +298,7 @@ GWCat.prototype.loadData = function(){
 				this.log('gwosc events error:',error,attr);
             },
             "success": function(gwoscData,attr){
+                this.log('gwoscData',gwoscData)
                 parseGWOSC(gwoscData,attr,this);
             }
         });
