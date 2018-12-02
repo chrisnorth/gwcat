@@ -37,11 +37,17 @@ GWCat.prototype.setLinks = function(){
     this.log('setting links',this.links)
     for (i in this.data){
         e=data[i].name;
-        if ((this.links[e]) && (this.links[e].LOSCData)){
-            link=this.links[e].LOSCData;
-            link.url=link.url;
-            data[i].opendata=link;
-        }
+        // if ((this.links[e]) && (this.links[e].LOSCData)){
+        //     link=this.links[e].LOSCData;
+        //     link.url=link.url;
+        //     data[i].opendata=link;
+        // }
+        link={
+            url:"https://www.gw-openscience.org/catalog/GWTC-1-confident/single/"+e,
+            text: "Open Data page",
+            type: "open-data"
+        };
+        data[i].opendata=link;
         if ((this.links[e]) && (this.links[e].DetPaper)){
             ref=this.links[e].DetPaper;
             ref.url=ref.url;
@@ -225,9 +231,9 @@ GWCat.prototype.loadData = function(){
                 return {'best':utcout};
             },
             'FAR':function(d){
-                if (d.far_pycbc.best!="NA") return {'best':d.far_pycbc,'fartype':'pycbc'};
-                if (d.far_gstlal.best!="NA") return {'best':d.far_gstlal,'fartype':'gstlal'};
-                if (d.far_cwb.best!="NA") return {'best':d.far_cwb,'fartype':'cwb'};
+                if (d.far_pycbc.best!="NA") return {'best':d.far_pycbc.best,'fartype':'pycbc'};
+                if (d.far_gstlal.best!="NA") return {'best':d.far_gstlal.best,'fartype':'gstlal'};
+                if (d.far_cwb.best!="NA") return {'best':d.far_cwb.best,'fartype':'cwb'};
             },
             'rho':function(d){
                 if (d.snr_pycbc.best!="NA") return {'best':d.snr_pycbc.best,'fartype':'pycbc'};
