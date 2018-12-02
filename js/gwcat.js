@@ -230,9 +230,9 @@ GWCat.prototype.loadData = function(){
                 if (d.far_cwb.best!="NA") return {'best':d.far_cwb,'fartype':'cwb'};
             },
             'rho':function(d){
-                if (d.snr_pycbc.best!="NA") return {'best':d.snr_pycbc,'fartype':'pycbc'};
-                if (d.snr_gstlal.best!="NA") return {'best':d.snr_gstlal,'fartype':'gstlal'};
-                if (d.smr_cwb.best!="NA") return {'best':d.snr_cwb,'fartype':'cwb'};
+                if (d.snr_pycbc.best!="NA") return {'best':d.snr_pycbc.best,'fartype':'pycbc'};
+                if (d.snr_gstlal.best!="NA") return {'best':d.snr_gstlal.best,'fartype':'gstlal'};
+                if (d.smr_cwb.best!="NA") return {'best':d.snr_cwb.best,'fartype':'cwb'};
             }
         }
         _gw.datagwosc=[];
