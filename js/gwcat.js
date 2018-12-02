@@ -302,7 +302,7 @@ GWCat.prototype.loadData = function(){
                 parseGWOSC(gwoscData,attr,this);
             }
         });
-        // this.testFile="https://www.gw-openscience.org/archive/links/O1/L1/1126051217/1127051217/json/";
+        // this.testFile="https://www.gw-openscience.org/archive/links/O1/L1/1126051217/1127051217/json/index.html";
         // d3.json(this.testFile, function(error, dataIn) {
         //     if (error){
         //         console.log('events error:',error,dataIn);
