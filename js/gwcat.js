@@ -148,7 +148,7 @@ GWCat.prototype.loadData = function(){
 		_gw.loaded++;
 		_gw.datadict=dataIn.datadict;
 		newlinks={}
-		for (e in dataIn.data){
+		for (e in dataIn.links){
 			// convert links to required format
 			if (dataIn.links[e]){
 				linkIn=dataIn.links[e];
