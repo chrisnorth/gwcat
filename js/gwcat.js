@@ -16,7 +16,7 @@ GWCat.prototype.init = function(){
     // console.log('debug',this.debug);
     this.datasrc = (this.inp && this.inp.datasrc) ? this.inp.datasrc : "local";
     this.fileIn = (this.inp && this.inp.fileIn) ? this.inp.fileIn : "data/events.json";
-    this.gwoscFile = (this.inp && this.inp.gwoscFile) ? this.inp.gwoscFile : "gwosc/gwosc.json";
+    this.gwoscFile = (this.inp && this.inp.gwoscFile) ? this.inp.gwoscFile : "data/gwosc.json";
     console.log(this.gwoscFile)
     this.loadMethod = (this.inp && this.inp.loadMethod) ? this.inp.loadMethod : "";
     return this;
