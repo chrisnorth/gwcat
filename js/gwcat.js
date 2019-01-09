@@ -257,7 +257,9 @@ GWCat.prototype.loadData = function(){
         _gw.log(_gw.datagwosc[0]);
         _gw.log(_gw.loaded+'/'+_gw.toLoad+'GWOSC data loaded:',_gw.datagwosc);
         if (_gw.loaded==_gw.toLoad){
+            _gw.length = _gw.data.length;
             _gw.data=_gw.datagwosc;
+            _gw.length = _gw.data.length;
             _gw.setLinks();
 			_gw.orderData('GPS');
 			return _gw.callback(_gw);
